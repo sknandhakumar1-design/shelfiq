@@ -1,0 +1,5 @@
+[core]
+    autostage = true
+    remote = myremote
+['remote "myremote"']
+    url = /mnt/c/Users/Nandha Kumar S K/Desktop/shelfiq/dvc_remote
