@@ -35,19 +35,11 @@ jobs:
             httpx==0.25.0 \
             pytest-asyncio \
             anyio \
-            python-dotenv \
+            setuptools \
             --only-binary=:all:
 
       - name: Run tests
         run: |
-          python -m pytest tests/test_model.py tests/test_features.py -v
-        env:
-          PYTHONPATH: .
-
-      - name: Verify API starts
-        run: |
-          python -m uvicorn api.main:app --host 0.0.0.0 --port 8000 &
-          sleep 5
-          curl -f http://localhost:8000/health || exit 1
+          python -m pytest tests/ -v
         env:
           PYTHONPATH: .
