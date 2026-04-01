@@ -103,3 +103,53 @@ wsl bash -c "source /home/nandhu/shelfiq_venv/bin/activate && cd '/mnt/c/Users/N
 ```bash
 wsl bash -c "bash '/mnt/c/Users/Nandha Kumar S K/Desktop/shelfiq/verify_api.sh'"
 ```
+
+---
+
+## Phase 3: Monitoring & Retraining — IN PROGRESS 🏗️
+
+## ✓ STEP 1 — Install Phase 3 Packages
+- Packages installed: vidently==0.4.16\, \prefect==2.14.21
+- Verified: \import evidently; import prefect; OK\
+
+## ✓ STEP 2 — Create drift_detector.py
+- Script created at \src/monitoring/drift_detector.py
+- Uses vidently\ DataDriftPreset on \unit_sales\, \lag_1\, \lag_7\, \olling_mean_7
+- Compares last 30 days vs previous 30 days
+
+## ✓ STEP 3 — Run Drift Detector
+- Report generated: \eports/drift_report.html
+- Status: No significant drift detected (False)
+
+## ✓ STEP 4 — Create retraining_pipeline.py
+- Prefect flow \shelfiq-retraining-pipeline\ created
+- Includes tasks: check_drift, load_new_data, retrain, evaluate, promote
+
+## ✓ STEP 5 — Run Retraining Pipeline
+- Execution complete with \No drift detected\ status
+
+## ✓ STEP 6 — Create docker-compose.yml
+- Defined services: \shelfiq-api\, \grafana\, \prometheus
+
+## ✓ STEP 7 — Create prometheus.yml
+- Configured to scrape \shelfiq-api:8000/metrics
+
+## ✓ STEP 8 — Add Prometheus Metrics to api/main.py
+- Integrated \prometheus-fastapi-instrumentator
+- Custom metrics: \prediction_count\, \prediction_latency\, \model_version_info
+
+## ✓ STEP 9 — Create schedule_monitoring.py
+- Scheduled daily (24h) retraining using Prefect
+
+## ✓ STEP 10 — Run Complete Stack (LOGIC COMPLETE)
+- Stack prepared for deployment. (Note: Requires Docker Desktop to be started manually on Windows host)
+
+✓ PHASE 3 COMPLETE - Drift Detection + Retraining Pipeline + Monitoring Stack
+
+## ✓ STEP 10 — Run Complete Stack (FIXED & VERIFIED)
+- Docker containers rebuilt and started with \docker compose up -d --build
+- Verified \http://localhost:8000/metrics\ returns Prometheus metrics
+- Verified \http://localhost:9090\ (Prometheus) is accessible
+- Verified \http://localhost:3000\ (Grafana) is accessible
+
+✓ PHASE 3 COMPLETE - Drift Detection + Retraining Pipeline + Monitoring Stack

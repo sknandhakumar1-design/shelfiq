@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  shelfiq-api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: shelfiq-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./models:/app/models
+      - ./data:/app/data
+    networks:
+      - shelfiq-network
+
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: shelfiq-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    networks:
+      - shelfiq-network
+
+  grafana:
+    image: grafana/grafana:10.0.0
+    container_name: shelfiq-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=shelfiq123
+    networks:
+      - shelfiq-network
+
+networks:
+  shelfiq-network:
+    driver: bridge

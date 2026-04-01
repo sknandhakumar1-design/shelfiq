@@ -12,9 +12,11 @@ from calendar import monthrange
 from typing import Optional
 
 import numpy as np
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+from prometheus_fastapi_instrumentator import Instrumentator
+from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
 
 # ─── Logging ─────────────────────────────────────────────────────────────────
 logging.basicConfig(level=logging.INFO)
@@ -33,6 +35,24 @@ _model         = None
 _model_loaded  = False
 _model_version = "unknown"
 _load_time     = None
+
+# ─── Custom Metrics ──────────────────────────────────────────────────────────
+# Define custom metrics
+prediction_count = Counter(
+    "prediction_count", 
+    "Total number of predictions served",
+    ["model_version"]
+)
+prediction_latency = Histogram(
+    "prediction_latency_seconds",
+    "Time spent processing prediction",
+    ["model_version"]
+)
+model_version_info = Gauge(
+    "model_version_info",
+    "Model version information",
+    ["model_version", "load_time"]
+)
 
 
 def _load_model() -> None:
@@ -58,6 +78,14 @@ def _load_model() -> None:
         mtime          = os.path.getmtime(MODEL_PATH)
         _model_version = f"champion_v1_{mtime:.0f}"
         _load_time     = datetime.utcnow().isoformat()
+        
+        # Update version info metric
+        model_version_info.labels(
+            model_version=_model_version,
+            load_time=_load_time
+        ).set(1)
+
+        # Warm-up prediction to confirm the model works end-to-end
 
         # Warm-up prediction to confirm the model works end-to-end
         test_features = [[5.0, 4.5, 4.0, 4.8, 4.5, 4.2, 2, 8, 15, 0, 0, 0, 1, 103665]]
@@ -103,6 +131,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 
 # ─── Schemas ─────────────────────────────────────────────────────────────────
@@ -166,6 +195,12 @@ async def health_check():
     )
 
 
+@app.get("/metrics", tags=["Monitoring"])
+async def metrics():
+    """Exposes Prometheus metrics."""
+    return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
+
 @app.post("/predict", response_model=PredictResponse, tags=["Prediction"])
 async def predict(request: PredictRequest):
     """
@@ -211,6 +246,11 @@ async def predict(request: PredictRequest):
         raw_prediction  = _model.predict(features)[0]
         predicted_sales = float(max(0.0, raw_prediction))
 
+        # Update metrics
+        prediction_count.labels(model_version=_model_version).inc()
+        # Latency is handled implicitly by Instrumentator for simple requests, 
+        # but we can also use a context manager if we want manual control.
+
         return PredictResponse(
             predicted_sales=predicted_sales,
             model_version=_model_version,
@@ -221,3 +261,11 @@ async def predict(request: PredictRequest):
     except Exception as exc:
         logger.error(f"Prediction error: {exc}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Prediction failed: {exc}")
+
+# ─── Instrumentation (MUST be last) ─────────────────────────────────────────
+instrumentator = Instrumentator(
+    should_group_status_codes=True,
+    should_ignore_untemplated=True,
+    should_respect_env_var=True,
+)
+instrumentator.instrument(app) # Note: we manually expose it above

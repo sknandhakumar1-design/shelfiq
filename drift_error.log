@@ -1,0 +1,15 @@
+Traceback (most recent call last):
+  File "/mnt/c/Users/Nandha Kumar S K/Desktop/shelfiq/src/monitoring/drift_detector.py", line 7, in <module>
+    from evidently.report import Report
+  File "/home/nandhu/shelfiq_venv/lib/python3.12/site-packages/evidently/report/__init__.py", line 1, in <module>
+    from .report import Report
+  File "/home/nandhu/shelfiq_venv/lib/python3.12/site-packages/evidently/report/report.py", line 14, in <module>
+    from evidently.base_metric import GenericInputData
+  File "/home/nandhu/shelfiq_venv/lib/python3.12/site-packages/evidently/base_metric.py", line 21, in <module>
+    from evidently.core import BaseResult
+  File "/home/nandhu/shelfiq_venv/lib/python3.12/site-packages/evidently/core.py", line 88, in <module>
+    @pydantic_type_validator(np.float_)
+                             ^^^^^^^^^
+  File "/home/nandhu/shelfiq_venv/lib/python3.12/site-packages/numpy/__init__.py", line 778, in __getattr__
+    raise AttributeError(
+AttributeError: `np.float_` was removed in the NumPy 2.0 release. Use `np.float64` instead.

@@ -35,7 +35,9 @@ RUN pip install --no-cache-dir --upgrade pip && \
         "fastapi>=0.104.0" \
         "uvicorn>=0.24.0" \
         pyarrow \
-        python-dotenv
+        python-dotenv \
+        prometheus-fastapi-instrumentator==6.1.0 \
+        prometheus-client
 
 # Copy application code
 COPY api/ ./api/
